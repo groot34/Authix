@@ -71,12 +71,34 @@ Implemented in Phase 1: `GET /health` only. All other endpoints planned.
 ### PostgreSQL
 
 Relational persistence. Responsibility:
-- Store registered users and their issued OTP code.
+- Store registered users and the issued OTP code.
 - Store checkout submissions.
 
-Schema goes in `database/migrations/` as `.sql` files. Migrations/files will be applied with a simple tool (TBD — probably just `psql -f` initially, migrate tooling added when needed).
+Schema lives in `database/migrations/` as ordered `.sql` files. Migrations
+are applied automatically at API startup by the Go binary in numerical
+order; already-applied versions are tracked in a `schema_migrations` table
+so re-runs are idempotent and already-applied files are never re-executed.
 
-Not yet connected in Phase 1.
+Connected to the Go API in Phase 2: pool, startup readiness check, and
+migration runner all live in `internal/database/`.
+
+#### Schema notes (Phase 2)
+
+- **users** (see `0001_extensions_and_users.sql`): `email` is stored as
+  `CITEXT` with a unique constraint, so `Alice@Example.com` and
+  `alice@example.com` are treated as the same user.
+- **OTP is hashed, not stored as plaintext.** The six-digit login code is
+  returned by the API ONCE for screen display at registration time. After
+  that, only the hash is kept in `users.otp_code_hash` (BYTEA) alongside
+  `otp_issued_at` and `otp_used_at`. This avoids keeping a reusable
+  plaintext credential at rest and lets us flip `otp_used_at` to block a
+  captured code from being replayed.
+- **checkouts** (see `0002_checkouts.sql`): `user_id` is nullable with
+  `ON DELETE SET NULL` so guest checkouts work and historical submissions
+  are preserved even if a user is deleted. Email, phone and shipping
+  fields are denormalised onto the submission row so each row records
+  exactly what the user submitted, independent of later profile edits.
+
 
 ## Typical Request Flow (Planned)
 
@@ -96,15 +118,32 @@ Implemented (Phase 1):
 - ✅ Backend `GET /health` + unit test
 - ✅ Docker Compose Postgres service definition
 
+Implemented (Phase 2 — DB wiring):
+- ✅ PostgreSQL schema: `users` + `checkouts` tables as ordered `.sql` migrations
+  under `database/migrations/`, with CITEXT email, hashed OTP, non-empty CHECKs,
+  and `schema_migrations` tracking table created by the runner.
+- ✅ Go backend ↔ PostgreSQL wiring:
+  - `internal/database/` — `lib/pq` driver, pool open/close, conservative
+    pool sizes, `WaitForReady` startup check with escape hatch.
+  - Migration runner: discovers files, orders by version, applies each
+    unapplied migration in its own transaction, records version in
+    `schema_migrations`, idempotent across restarts.
+  - `cmd/api/main.go` wires pool open → readiness check → migrations →
+    HTTP listen, preserving clean-shutdown behaviour.
+- ✅ Config: `internal/config` reads `POSTGRES_*` and `MIGRATIONS_DIR` from
+  env, defaults match `.env.example` + docker-compose.
+- ✅ Tests: config parsing (defaults + overrides), offline migration
+  discovery / ordering / duplicate-version / missing-dir / URL builder,
+  and a live-DB integration test against a throwaway cluster (when PG
+  binaries are on PATH; skipped in `-short` mode).
+
 Planned:
 - Registration form page and API endpoint
-- OTP generation (6-digit numeric)
+- OTP generation (6-digit numeric, hashed on save)
 - Email-owner lookup endpoint
 - OTP verify endpoint
 - Checkout form + validation + OTP modal UI
 - Checkout submission endpoint
-- PostgreSQL schema + migrations
-- Go backend ↔ PostgreSQL wiring
 - Deployment + hosting
 
 ## Principles

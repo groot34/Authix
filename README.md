@@ -10,7 +10,7 @@ The project meets the assessment requirements while keeping the architecture cle
 
 ## Status
 
-**Phase 1 — Foundation complete**
+**Phase 2 — Foundation + PostgreSQL wiring complete; registration/checkout endpoints next**
 
 ### Technology Stack
 
@@ -20,6 +20,8 @@ The project meets the assessment requirements while keeping the architecture cle
 | Backend | Go (`net/http`) |
 | Database | PostgreSQL |
 | Local DB | Docker Compose (PostgreSQL 16 Alpine) |
+| SQL Driver | `github.com/lib/pq` via `database/sql` |
+| Migrations | Ordered `.sql` files in `database/migrations/`, applied at API startup, tracked in `schema_migrations` |
 
 ## Implemented Features
 
@@ -28,7 +30,9 @@ The project meets the assessment requirements while keeping the architecture cle
 - Backend: Go module `github.com/authix/authix`, entry point
 - Backend: `GET /health` JSON endpoint
 - Backend: unit test for `/health`
-- Docker Compose: local PostgreSQL service (not yet wired to the API)
+- Docker Compose: local PostgreSQL service (wired to API via env vars)
+- Database schema: `users` + `checkouts` tables as ordered SQL migrations
+- Backend ↔ PostgreSQL connection pool, startup liveness check, and idempotent migration runner
 
 ## Planned Features
 
@@ -39,7 +43,6 @@ The project meets the assessment requirements while keeping the architecture cle
 - Background email-owner check modal with skip option
 - OTP verification and in-app user greeting
 - Checkout submission and persistence
-- Database migrations with migrations/schema.sql
 - Public deployment (Vercel + Supabase or similar free tier)
 
 ## High-Level Architecture
@@ -88,17 +91,17 @@ Health check:
 curl http://localhost:8080/health
 ```
 
-### Local Database (Phase 1+)
+### Local Database (Phase 2+)
 
 ```bash
 docker compose up -d
 ```
 
-Starts PostgreSQL on `localhost:5432` with database `authix`, user `authix_user`, password `authix_password`. See `.env.example` for variables. In this phase the API does not yet connect to PostgreSQL.
+Starts PostgreSQL on `localhost:5432` with database `authix`, user `authix_user`, password `authix_password`. See `.env.example` for variables. The API reads these same env vars, opens a pool, applies pending migrations from `database/migrations/` automatically on startup, and logs which migrations were applied (or "no new migrations to apply" when everything is current). If PostgreSQL isn't running and you just want a quick API smoke test, start the API with `AUTHIX_SKIP_DB_STARTUP_CHECK=1` — it will still refuse DB operations but the HTTP listener will come up.
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in values. The backend reads `BACKEND_PORT` (default `8080`) and will later read `POSTGRES_*` variables.
+Copy `.env.example` to `.env` and fill in values. The backend reads `BACKEND_PORT` (default `8080`), `BACKEND_ENV`, `MIGRATIONS_DIR`, and the full set of `POSTGRES_*` variables (Host/Port/User/Password/DB). All defaults match the `docker-compose.yml` service so local dev works out of the box without a `.env` if the compose DB is running on `localhost:5432`.
 
 ## Tests
 
