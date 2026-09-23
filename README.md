@@ -27,7 +27,7 @@ The project meets the assessment requirements while keeping the architecture cle
 
 - Frontend: Vite + React + TypeScript scaffold
 - Frontend: minimal Authix landing page
-- Backend: Go module `github.com/authix/authix`, entry point
+- Backend: Go module `github.com/groot34/Authix`, entry point
 - Backend: `GET /health` JSON endpoint
 - Backend: unit test for `/health`
 - Docker Compose: local PostgreSQL service (wired to API via env vars)

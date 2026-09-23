@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/authix/authix/internal/database"
+	"github.com/groot34/Authix/internal/database"
 )
 
 func findExec(t *testing.T, candidates ...string) string {

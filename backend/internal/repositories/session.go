@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/authix/authix/internal/database"
+	"github.com/groot34/Authix/internal/database"
 )
 
 var ErrSessionNotFound = errors.New("repositories: session not found")

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/authix/authix/internal/services"
+	"github.com/groot34/Authix/internal/services"
 )
 
 type fakeAuthAPI struct {

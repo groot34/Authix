@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/authix/authix/internal/config"
-	"github.com/authix/authix/internal/database"
-	"github.com/authix/authix/internal/handlers"
-	"github.com/authix/authix/internal/repositories"
-	"github.com/authix/authix/internal/services"
+	"github.com/groot34/Authix/internal/config"
+	"github.com/groot34/Authix/internal/database"
+	"github.com/groot34/Authix/internal/handlers"
+	"github.com/groot34/Authix/internal/repositories"
+	"github.com/groot34/Authix/internal/services"
 )
 
 func main() {

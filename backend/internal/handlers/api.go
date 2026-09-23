@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/authix/authix/internal/services"
+	"github.com/groot34/Authix/internal/services"
 )
 
 type authAPI interface {

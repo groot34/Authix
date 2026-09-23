@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/authix/authix/internal/repositories"
+	"github.com/groot34/Authix/internal/repositories"
 )
 
 type fakeCheckoutRepo struct {

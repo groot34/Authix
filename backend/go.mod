@@ -1,4 +1,4 @@
-module github.com/authix/authix
+module github.com/groot34/Authix
 
 go 1.23
 
