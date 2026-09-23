@@ -151,3 +151,9 @@ Run the service tests, short backend suite, vet, and build. Review the OTP schem
 ## 2026-09-23 — Phase 3.2.1: OTP security hardening
 
 Before adding handlers, enforce a ten-minute OTP lifetime, reject future or inconsistent issue times, add a process-local five-failure rate limit with cleanup, and make OTP consumption atomic when the stored hash still matches. Add focused service and PostgreSQL tests, document the single-instance limitation, and do not change the schema or commit anything.
+
+---
+
+## 2026-09-23 — Phase 3.3A: Session management foundation
+
+Add the server-side session foundation needed after OTP verification: a new sessions migration, context-aware repository methods for create, validate, and revoke, and a small service that generates opaque crypto-random tokens, stores only their hashes, and applies expiry and revocation checks. Add deterministic service tests and a PostgreSQL lifecycle test. Keep handlers, cookies, routes, frontend work, and commits for later phases.

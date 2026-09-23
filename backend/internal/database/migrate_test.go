@@ -45,8 +45,8 @@ func TestReadMigrationsDirFS_OrdersAndFilters(t *testing.T) {
 }
 
 func TestDiscoverMigrations_OnRealDir(t *testing.T) {
-	// Use the project's actual database/migrations dir. It currently
-	// contains exactly two files: 0001 and 0002.
+	// Use the project's actual database/migrations dir. It contains the
+	// numbered migrations committed with the project.
 	projectRoot, err := filepath.Abs(filepath.Join("..", "..", ".."))
 	if err != nil {
 		t.Fatal(err)
