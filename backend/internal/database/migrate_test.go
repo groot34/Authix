@@ -107,7 +107,7 @@ func TestParamsURL(t *testing.T) {
 		Host: "h", Port: "5432", User: "u", Password: "pw", DBName: "d",
 	}
 	got := p.URL()
-	want := "host=h port=5432 user=u password=pw dbname=d sslmode=disable"
+	want := "host='h' port='5432' user='u' password='pw' dbname='d' sslmode='disable'"
 	if got != want {
 		t.Errorf("URL = %q\nwant = %q", got, want)
 	}

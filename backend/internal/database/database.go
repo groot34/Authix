@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -45,8 +46,14 @@ func (p Params) URL() string {
 	}
 	return fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		p.Host, p.Port, p.User, p.Password, p.DBName, sslMode,
+		quoteLibPQValue(p.Host), quoteLibPQValue(p.Port), quoteLibPQValue(p.User),
+		quoteLibPQValue(p.Password), quoteLibPQValue(p.DBName), quoteLibPQValue(sslMode),
 	)
+}
+
+func quoteLibPQValue(value string) string {
+	escaped := strings.NewReplacer(`\`, `\\`, `'`, `\'`).Replace(value)
+	return "'" + escaped + "'"
 }
 
 // Open creates and configures a *sql.DB pool for PostgreSQL. It does not
