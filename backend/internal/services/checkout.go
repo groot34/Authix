@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +19,12 @@ var (
 	ErrInvalidShippingRegion  = errors.New("services: invalid shipping region")
 	ErrInvalidShippingCountry = errors.New("services: invalid shipping country code")
 	ErrInvalidUserID          = errors.New("services: invalid user id")
+)
+
+var (
+	phonePattern  = regexp.MustCompile(`^\+?[0-9][0-9 ()-]*[0-9]$`)
+	namePattern   = regexp.MustCompile(`^[\p{L}]+(?:[ .'-][\p{L}]+)*$`)
+	postalPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9 -]{1,10}[A-Za-z0-9]$`)
 )
 
 type CheckoutSubmission struct {
@@ -58,19 +65,21 @@ func validateCheckout(in *CheckoutSubmission) error {
 	if !looksLikeEmail(in.Email) {
 		return ErrInvalidEmail
 	}
-	if trimSpace(in.Phone) == "" {
+	phone := trimSpace(in.Phone)
+	if !phonePattern.MatchString(phone) || countDigits(phone) < 7 || countDigits(phone) > 15 {
 		return ErrInvalidPhone
 	}
 	if trimSpace(in.ShippingAddressLine1) == "" {
 		return ErrInvalidShippingLine1
 	}
-	if trimSpace(in.ShippingCity) == "" {
+	if !validPlaceName(in.ShippingCity) {
 		return ErrInvalidShippingCity
 	}
-	if trimSpace(in.ShippingPostalCode) == "" {
+	postal := trimSpace(in.ShippingPostalCode)
+	if !postalPattern.MatchString(postal) {
 		return ErrInvalidShippingPostal
 	}
-	if trimSpace(in.ShippingRegion) == "" {
+	if !validPlaceName(in.ShippingRegion) {
 		return ErrInvalidShippingRegion
 	}
 	country := trimSpace(in.ShippingCountryCode)
@@ -87,6 +96,20 @@ func validateCheckout(in *CheckoutSubmission) error {
 		return ErrInvalidUserID
 	}
 	return nil
+}
+
+func countDigits(value string) int {
+	count := 0
+	for _, char := range value {
+		if char >= '0' && char <= '9' {
+			count++
+		}
+	}
+	return count
+}
+
+func validPlaceName(value string) bool {
+	return namePattern.MatchString(trimSpace(value))
 }
 
 func (s *CheckoutService) Submit(ctx context.Context, in *CheckoutSubmission) (*CheckoutReceipt, error) {

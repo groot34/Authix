@@ -111,6 +111,10 @@ func (a *API) Reissue(w http.ResponseWriter, r *http.Request) {
 	}
 	code, user, err := a.auth.ReissueOTP(r.Context(), in.Email)
 	if err != nil {
+		if errors.Is(err, services.ErrUserNotRegistered) {
+			writeError(w, http.StatusNotFound, "no registered account found for this email")
+			return
+		}
 		a.writeServiceError(w, err)
 		return
 	}

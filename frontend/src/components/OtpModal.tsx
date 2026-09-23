@@ -10,10 +10,8 @@ interface OtpModalProps {
 
 export function OtpModal({ email, open, onClose, onSuccess }: OtpModalProps) {
   const [code, setCode] = useState('');
-  const [replacementCode, setReplacementCode] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [reissuing, setReissuing] = useState(false);
 
   if (!open) return null;
 
@@ -27,21 +25,6 @@ export function OtpModal({ email, open, onClose, onSuccess }: OtpModalProps) {
       setMessage(error instanceof ApiError ? error.message : 'The code could not be verified.');
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  async function reissueCode() {
-    setReissuing(true);
-    setMessage('');
-    try {
-      const result = await api.reissue(email);
-      setReplacementCode(result.otp_code);
-      setCode('');
-      setMessage('A fresh code is ready below.');
-    } catch (error) {
-      setMessage(error instanceof ApiError ? error.message : 'A new code could not be issued.');
-    } finally {
-      setReissuing(false);
     }
   }
 
@@ -64,15 +47,11 @@ export function OtpModal({ email, open, onClose, onSuccess }: OtpModalProps) {
           placeholder="000000"
           autoFocus
         />
-        {replacementCode && <p className="code-notice">Your new code: <strong>{replacementCode}</strong></p>}
         {message && <p className="form-message is-error" role="alert">{message}</p>}
         <button className="primary-action action-wide" type="button" disabled={submitting || code.length !== 6} onClick={submitCode}>
           {submitting ? 'Checking…' : 'Verify code'}
         </button>
         <div className="modal-actions">
-          <button className="quiet-button" type="button" disabled={reissuing} onClick={reissueCode}>
-            {reissuing ? 'Issuing…' : 'Request a new code'}
-          </button>
           <button className="quiet-button" type="button" onClick={onClose}>Continue as guest</button>
         </div>
       </section>

@@ -128,6 +128,20 @@ func TestAPI_InvalidJSONAndServiceErrors(t *testing.T) {
 	}
 }
 
+func TestAPI_ReissueRejectsUnregisteredEmail(t *testing.T) {
+	auth := &fakeAuthAPI{
+		reissueFn: func(context.Context, string) (string, *services.RegisteredUser, error) {
+			return "", nil, services.ErrUserNotRegistered
+		},
+	}
+	a := testAPI(auth, &fakeCheckoutAPI{}, &fakeSessionAPI{})
+	response := httptest.NewRecorder()
+	a.Reissue(response, requestJSON(http.MethodPost, "/api/auth/reissue", `{"email":"unknown@example.com"}`))
+	if response.Code != http.StatusNotFound || !strings.Contains(response.Body.String(), "no registered account") {
+		t.Fatalf("unregistered reissue response: %d %s", response.Code, response.Body.String())
+	}
+}
+
 func TestAPI_VerifyCreatesSessionOnlyOnSuccess(t *testing.T) {
 	sessions := &fakeSessionAPI{
 		createFn: func(context.Context, int64) (*services.SessionCredentials, error) {

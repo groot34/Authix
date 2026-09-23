@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { OtpModal } from './components/OtpModal';
 import { api, ApiError, type RegisteredUser } from './lib/api';
-import { isValidEmail } from './lib/validation';
+import { isValidCountryCode, isValidEmail, isValidPhone, isValidPlaceName, isValidPostalCode } from './lib/validation';
 import { useEmailRecognition } from './features/auth/useEmailRecognition';
 
 const emptyCheckout = {
@@ -24,6 +24,10 @@ function App() {
   const [registrationError, setRegistrationError] = useState('');
   const [registrationCode, setRegistrationCode] = useState('');
   const [registering, setRegistering] = useState(false);
+  const [reissueEmail, setReissueEmail] = useState('');
+  const [reissueError, setReissueError] = useState('');
+  const [reissuedCode, setReissuedCode] = useState('');
+  const [reissuingCode, setReissuingCode] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<RegisteredUser | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [dismissedEmail, setDismissedEmail] = useState('');
@@ -74,6 +78,41 @@ function App() {
     }
   }
 
+  async function generateNewCode() {
+    setReissueError('');
+    setReissuedCode('');
+    if (!isValidEmail(reissueEmail)) {
+      setReissueError('Enter the registered email address.');
+      return;
+    }
+    setReissuingCode(true);
+    try {
+      const result = await api.reissue(reissueEmail.trim());
+      setReissuedCode(result.otp_code);
+    } catch (error) {
+      setReissueError(error instanceof ApiError ? error.message : 'A new code could not be issued.');
+    } finally {
+      setReissuingCode(false);
+    }
+  }
+
+  function renderCodeReissue() {
+    return (
+      <div className="reissue-panel">
+        <p className="eyebrow">Existing account</p>
+        <p className="panel-copy">Forgot your code? Generate a new one using your registered email.</p>
+        <label className="field-label" htmlFor="reissue-email">Registered email</label>
+        <input id="reissue-email" className="text-input" type="email" value={reissueEmail} onChange={(event) => { setReissueEmail(event.target.value); setReissueError(''); setReissuedCode(''); }} placeholder="you@example.com" autoComplete="email" />
+        {reissueEmail && !isValidEmail(reissueEmail) && <p className="field-hint is-error">Use a complete email address.</p>}
+        {reissueError && <p className="form-message is-error" role="alert">{reissueError}</p>}
+        {reissuedCode && <div className="code-reveal" role="status"><span>Your new code</span><strong>{reissuedCode}</strong><small>Use it in the checkout verification window.</small></div>}
+        <button className="quiet-button account-code-action" type="button" disabled={reissuingCode || !isValidEmail(reissueEmail)} onClick={generateNewCode}>
+          {reissuingCode ? 'Generating…' : 'Generate a new code'}
+        </button>
+      </div>
+    );
+  }
+
   function updateCheckout(field: keyof CheckoutState, value: string) {
     setCheckout((current) => ({ ...current, [field]: value }));
     setCheckoutError('');
@@ -81,21 +120,28 @@ function App() {
     if (field === 'email' && value.trim().toLowerCase() !== dismissedEmail) setDismissedEmail('');
   }
 
+  function checkoutValidationMessage() {
+    if (!isValidEmail(checkout.email)) return 'Enter a valid email address.';
+    if (!isValidPhone(checkout.phone)) return 'Enter a valid phone number with 7–15 digits.';
+    if (!checkout.shipping_address_line1.trim()) return 'Enter your address.';
+    if (!isValidPlaceName(checkout.shipping_city)) return 'Enter a valid city name.';
+    if (!isValidPostalCode(checkout.shipping_postal_code)) return 'Enter a valid postal code.';
+    if (!isValidPlaceName(checkout.shipping_region)) return 'Enter a valid region name.';
+    if (!isValidCountryCode(checkout.shipping_country_code)) return 'Enter a valid two-letter country code.';
+    return '';
+  }
+
   async function submitCheckout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCheckoutError('');
     setCheckoutSuccess('');
-    if (!isValidEmail(checkout.email)) {
-      setCheckoutError('Enter a valid checkout email.');
+    const validationMessage = checkoutValidationMessage();
+    if (validationMessage) {
+      setCheckoutError(validationMessage);
       return;
     }
     if (authenticatedUser && checkout.email.trim().toLowerCase() !== authenticatedUser.email.trim().toLowerCase()) {
       setCheckoutError(`This session belongs to ${authenticatedUser.email}. Use that email or sign out before continuing.`);
-      return;
-    }
-    const requiredFields: Array<keyof CheckoutState> = ['phone', 'shipping_address_line1', 'shipping_city', 'shipping_postal_code', 'shipping_region', 'shipping_country_code'];
-    if (requiredFields.some((field) => !checkout[field].trim())) {
-      setCheckoutError('Complete the required contact and shipping fields.');
       return;
     }
     setSubmittingCheckout(true);
@@ -146,6 +192,7 @@ function App() {
               <h2>Good to see you, {authenticatedUser.first_name}.</h2>
               <p className="panel-copy">Your secure session is active and ready to attach to this checkout.</p>
               <button className="secondary-action" type="button" onClick={() => api.logout().then(() => setAuthenticatedUser(null))}>Sign out</button>
+              {renderCodeReissue()}
             </div>
           ) : (
             <>
@@ -159,6 +206,7 @@ function App() {
                 <button className="primary-action action-wide" type="submit" disabled={registering}>{registering ? 'Creating…' : 'Create account'} <span aria-hidden="true">↗</span></button>
               </form>
               {registrationCode && <div className="code-reveal" role="status"><span>Your display code</span><strong>{registrationCode}</strong><small>Keep it nearby for verification.</small></div>}
+              {renderCodeReissue()}
             </>
           )}
         </section>
@@ -176,9 +224,9 @@ function App() {
               {recognition.status === 'registered' && recognition.user && !authenticatedUser && <p className="field-hint is-recognized">Account recognized. Verification will open shortly.</p>}
               {recognition.status === 'error' && <p className="field-hint is-error">{recognition.error}</p>}
             </div>
-            <div className="field-row"><div><label className="field-label" htmlFor="phone">Phone number</label><input id="phone" className="text-input" value={checkout.phone} onChange={(event) => updateCheckout('phone', event.target.value)} autoComplete="tel" /></div><div><label className="field-label" htmlFor="country">Country code</label><input id="country" className="text-input" maxLength={2} value={checkout.shipping_country_code} onChange={(event) => updateCheckout('shipping_country_code', event.target.value.toUpperCase())} placeholder="US" autoComplete="country" /></div></div>
+            <div className="field-row"><div><label className="field-label" htmlFor="phone">Phone number</label><input id="phone" className="text-input" value={checkout.phone} onChange={(event) => updateCheckout('phone', event.target.value)} autoComplete="tel" />{checkout.phone && !isValidPhone(checkout.phone) && <p className="field-hint is-error">Use 7–15 digits with optional +, spaces, hyphens, or parentheses.</p>}</div><div><label className="field-label" htmlFor="country">Country code</label><input id="country" className="text-input" maxLength={2} value={checkout.shipping_country_code} onChange={(event) => updateCheckout('shipping_country_code', event.target.value.toUpperCase())} placeholder="US" autoComplete="country" /></div></div>
             <div className="field-row"><div><label className="field-label" htmlFor="address-line1">Address line 1</label><input id="address-line1" className="text-input" value={checkout.shipping_address_line1} onChange={(event) => updateCheckout('shipping_address_line1', event.target.value)} autoComplete="address-line1" /></div><div><label className="field-label" htmlFor="address-line2">Address line 2 <span className="optional-label">Optional</span></label><input id="address-line2" className="text-input" value={checkout.shipping_address_line2} onChange={(event) => updateCheckout('shipping_address_line2', event.target.value)} autoComplete="address-line2" /></div></div>
-            <div className="field-row field-row-three"><div><label className="field-label" htmlFor="city">City</label><input id="city" className="text-input" value={checkout.shipping_city} onChange={(event) => updateCheckout('shipping_city', event.target.value)} autoComplete="address-level2" /></div><div><label className="field-label" htmlFor="region">Region</label><input id="region" className="text-input" value={checkout.shipping_region} onChange={(event) => updateCheckout('shipping_region', event.target.value)} autoComplete="address-level1" /></div><div><label className="field-label" htmlFor="postal">Postal code</label><input id="postal" className="text-input" value={checkout.shipping_postal_code} onChange={(event) => updateCheckout('shipping_postal_code', event.target.value)} autoComplete="postal-code" /></div></div>
+            <div className="field-row field-row-three"><div><label className="field-label" htmlFor="city">City</label><input id="city" className="text-input" value={checkout.shipping_city} onChange={(event) => updateCheckout('shipping_city', event.target.value)} autoComplete="address-level2" />{checkout.shipping_city && !isValidPlaceName(checkout.shipping_city) && <p className="field-hint is-error">Use letters, spaces, apostrophes, hyphens, or periods.</p>}</div><div><label className="field-label" htmlFor="region">Region</label><input id="region" className="text-input" value={checkout.shipping_region} onChange={(event) => updateCheckout('shipping_region', event.target.value)} autoComplete="address-level1" />{checkout.shipping_region && !isValidPlaceName(checkout.shipping_region) && <p className="field-hint is-error">Use a valid region name.</p>}</div><div><label className="field-label" htmlFor="postal">Postal code</label><input id="postal" className="text-input" value={checkout.shipping_postal_code} onChange={(event) => updateCheckout('shipping_postal_code', event.target.value)} autoComplete="postal-code" />{checkout.shipping_postal_code && !isValidPostalCode(checkout.shipping_postal_code) && <p className="field-hint is-error">Use a valid postal code.</p>}</div></div>
             {checkoutError && <p className="form-message is-error" role="alert">{checkoutError}</p>}
             {checkoutSuccess && <p className="form-message is-success" role="status">{checkoutSuccess}</p>}
             <button className="primary-action action-wide" type="submit" disabled={submittingCheckout}>{submittingCheckout ? 'Saving details…' : 'Save checkout details'} <span aria-hidden="true">↗</span></button>

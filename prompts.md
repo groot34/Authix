@@ -381,3 +381,27 @@ Submit guest and authenticated checkout details through the existing checkout AP
 ## 2026-09-23 — Phase 4.3.7: Verify the checkout flow
 
 Run the frontend build and any available checks. Note the remaining end-to-end work with a running backend, and leave deployment for a later phase.
+
+---
+
+## 2026-09-23 — Add checkout input validation
+
+Strengthen client-side and server-side validation for standard email addresses, international phone numbers, place names, and postal codes. Reject alphabetic or emoji phone input and invalid city, region, postal, or email formats while preserving realistic address data.
+
+---
+
+## 2026-09-23 — Gate invalid checkout submissions
+
+Prevent checkout requests from being sent when any required field is missing or malformed. Show a clear validation error in the form, while retaining backend validation as the authoritative persistence guard.
+
+---
+
+## 2026-09-23 — Add standalone existing-account code generation
+
+Provide a separate existing-account section with an email field and Generate a new code button. Keep new-account registration code generation unchanged, show the returned code for registered emails, and show a clear error for unregistered emails.
+
+---
+
+## 2026-09-23 — Move OTP reissue to account access
+
+Move the Generate a new code action out of the checkout delivery modal and place it beside account creation, so checkout only handles entering the existing code or continuing as a guest.

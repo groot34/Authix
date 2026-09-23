@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +24,8 @@ const (
 	otpRateLimitAttempts = 5
 	otpRateLimitWindow   = 15 * time.Minute
 )
+
+var emailPattern = regexp.MustCompile("^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$")
 
 var (
 	ErrUserAlreadyRegistered = errors.New("services: user already registered")
@@ -163,11 +166,7 @@ func normalizeEmail(s string) string { return strings.ToLower(trimSpace(s)) }
 
 func looksLikeEmail(s string) bool {
 	n := normalizeEmail(s)
-	if n == "" {
-		return false
-	}
-	at := strings.IndexByte(n, '@')
-	return at > 0 && at < len(n)-1
+	return emailPattern.MatchString(n)
 }
 
 func validateRegistrationFields(email, firstName, lastName string) error {
