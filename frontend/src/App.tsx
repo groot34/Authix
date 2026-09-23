@@ -18,6 +18,7 @@ const emptyCheckout = {
 type CheckoutState = typeof emptyCheckout;
 
 function App() {
+  const [accessMode, setAccessMode] = useState<'register' | 'existing'>('register');
   const [registrationEmail, setRegistrationEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -38,7 +39,22 @@ function App() {
   const recognition = useEmailRecognition();
 
   useEffect(() => {
-    api.me().then((result) => setAuthenticatedUser(result.user)).catch(() => undefined);
+    if (!registrationCode) return;
+    const timer = window.setTimeout(() => setRegistrationCode(''), 15_000);
+    return () => window.clearTimeout(timer);
+  }, [registrationCode]);
+
+  useEffect(() => {
+    if (!reissuedCode) return;
+    const timer = window.setTimeout(() => setReissuedCode(''), 15_000);
+    return () => window.clearTimeout(timer);
+  }, [reissuedCode]);
+
+  useEffect(() => {
+    api.me().then((result) => {
+      setAuthenticatedUser(result.user);
+      setAccessMode('existing');
+    }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -110,6 +126,23 @@ function App() {
           {reissuingCode ? 'Generating…' : 'Generate a new code'}
         </button>
       </div>
+    );
+  }
+
+  function renderRegistration() {
+    return (
+      <>
+        <div className="panel-heading"><div><p className="eyebrow">New account</p><h2>Create your access</h2></div><span className="panel-step">01 / 02</span></div>
+        <form onSubmit={register} noValidate>
+          <label className="field-label" htmlFor="registration-email">Email address</label>
+          <input id="registration-email" className="text-input" type="email" value={registrationEmail} onChange={(event) => setRegistrationEmail(event.target.value)} placeholder="you@example.com" autoComplete="email" />
+          {registrationEmail && !isValidEmail(registrationEmail) && <p className="field-hint is-error">Use a complete email address.</p>}
+          <div className="field-row"><div><label className="field-label" htmlFor="first-name">First name</label><input id="first-name" className="text-input" value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="given-name" /></div><div><label className="field-label" htmlFor="last-name">Last name</label><input id="last-name" className="text-input" value={lastName} onChange={(event) => setLastName(event.target.value)} autoComplete="family-name" /></div></div>
+          {registrationError && <p className="form-message is-error" role="alert">{registrationError}</p>}
+          <button className="primary-action action-wide" type="submit" disabled={registering}>{registering ? 'Creating…' : 'Create account'} <span aria-hidden="true">↗</span></button>
+        </form>
+        {registrationCode && <div className="code-reveal" role="status"><span>Your display code</span><strong>{registrationCode}</strong><small>Code hidden after 15 seconds.</small></div>}
+      </>
     );
   }
 
@@ -187,26 +220,14 @@ function App() {
 
         <section className="auth-panel" aria-label="Account access">
           {authenticatedUser ? (
-            <div className="authenticated-state">
-              <p className="eyebrow">Signed in</p>
-              <h2>Good to see you, {authenticatedUser.first_name}.</h2>
-              <p className="panel-copy">Your secure session is active and ready to attach to this checkout.</p>
-              <button className="secondary-action" type="button" onClick={() => api.logout().then(() => setAuthenticatedUser(null))}>Sign out</button>
-              {renderCodeReissue()}
-            </div>
+            <div className="authenticated-state"><p className="eyebrow">Signed in</p><h2>Good to see you, {authenticatedUser.first_name}.</h2><p className="panel-copy">Your secure session is active and ready to attach to this checkout.</p><button className="secondary-action" type="button" onClick={() => api.logout().then(() => setAuthenticatedUser(null))}>Sign out</button></div>
           ) : (
             <>
-              <div className="panel-heading"><div><p className="eyebrow">New account</p><h2>Create your access</h2></div><span className="panel-step">01 / 02</span></div>
-              <form onSubmit={register} noValidate>
-                <label className="field-label" htmlFor="registration-email">Email address</label>
-                <input id="registration-email" className="text-input" type="email" value={registrationEmail} onChange={(event) => setRegistrationEmail(event.target.value)} placeholder="you@example.com" autoComplete="email" />
-                {registrationEmail && !isValidEmail(registrationEmail) && <p className="field-hint is-error">Use a complete email address.</p>}
-                <div className="field-row"><div><label className="field-label" htmlFor="first-name">First name</label><input id="first-name" className="text-input" value={firstName} onChange={(event) => setFirstName(event.target.value)} autoComplete="given-name" /></div><div><label className="field-label" htmlFor="last-name">Last name</label><input id="last-name" className="text-input" value={lastName} onChange={(event) => setLastName(event.target.value)} autoComplete="family-name" /></div></div>
-                {registrationError && <p className="form-message is-error" role="alert">{registrationError}</p>}
-                <button className="primary-action action-wide" type="submit" disabled={registering}>{registering ? 'Creating…' : 'Create account'} <span aria-hidden="true">↗</span></button>
-              </form>
-              {registrationCode && <div className="code-reveal" role="status"><span>Your display code</span><strong>{registrationCode}</strong><small>Keep it nearby for verification.</small></div>}
-              {renderCodeReissue()}
+              <div className="access-toggle" role="tablist" aria-label="Account access mode">
+                <button className={accessMode === 'register' ? 'is-active' : ''} type="button" role="tab" aria-selected={accessMode === 'register'} onClick={() => setAccessMode('register')}>Register new user</button>
+                <button className={accessMode === 'existing' ? 'is-active' : ''} type="button" role="tab" aria-selected={accessMode === 'existing'} onClick={() => setAccessMode('existing')}>Existing user</button>
+              </div>
+              {accessMode === 'register' ? renderRegistration() : renderCodeReissue()}
             </>
           )}
         </section>
@@ -224,12 +245,12 @@ function App() {
               {recognition.status === 'registered' && recognition.user && !authenticatedUser && <p className="field-hint is-recognized">Account recognized. Verification will open shortly.</p>}
               {recognition.status === 'error' && <p className="field-hint is-error">{recognition.error}</p>}
             </div>
-            <div className="field-row"><div><label className="field-label" htmlFor="phone">Phone number</label><input id="phone" className="text-input" value={checkout.phone} onChange={(event) => updateCheckout('phone', event.target.value)} autoComplete="tel" />{checkout.phone && !isValidPhone(checkout.phone) && <p className="field-hint is-error">Use 7–15 digits with optional +, spaces, hyphens, or parentheses.</p>}</div><div><label className="field-label" htmlFor="country">Country code</label><input id="country" className="text-input" maxLength={2} value={checkout.shipping_country_code} onChange={(event) => updateCheckout('shipping_country_code', event.target.value.toUpperCase())} placeholder="US" autoComplete="country" /></div></div>
-            <div className="field-row"><div><label className="field-label" htmlFor="address-line1">Address line 1</label><input id="address-line1" className="text-input" value={checkout.shipping_address_line1} onChange={(event) => updateCheckout('shipping_address_line1', event.target.value)} autoComplete="address-line1" /></div><div><label className="field-label" htmlFor="address-line2">Address line 2 <span className="optional-label">Optional</span></label><input id="address-line2" className="text-input" value={checkout.shipping_address_line2} onChange={(event) => updateCheckout('shipping_address_line2', event.target.value)} autoComplete="address-line2" /></div></div>
+            <div className="field-row"><div><label className="field-label" htmlFor="phone">Phone number</label><input id="phone" className="text-input" value={checkout.phone} onChange={(event) => updateCheckout('phone', event.target.value)} autoComplete="tel" />{checkout.phone && !isValidPhone(checkout.phone) && <p className="field-hint is-error">Use 7–15 digits with optional +, spaces, hyphens, or parentheses.</p>}</div><div><label className="field-label" htmlFor="country">Country code</label><input id="country" className="text-input" maxLength={2} value={checkout.shipping_country_code} onChange={(event) => updateCheckout('shipping_country_code', event.target.value.toUpperCase())} placeholder="US" autoComplete="country" />{checkout.shipping_country_code && !isValidCountryCode(checkout.shipping_country_code) && <p className="field-hint is-error">Use a two-letter country code.</p>}</div></div>
+            <div className="field-row"><div><label className="field-label" htmlFor="address-line1">Address line 1</label><input id="address-line1" className="text-input" value={checkout.shipping_address_line1} onChange={(event) => updateCheckout('shipping_address_line1', event.target.value)} autoComplete="address-line1" />{!checkout.shipping_address_line1.trim() && <p className="field-hint is-error">Enter your address.</p>}</div><div><label className="field-label" htmlFor="address-line2">Address line 2 <span className="optional-label">Optional</span></label><input id="address-line2" className="text-input" value={checkout.shipping_address_line2} onChange={(event) => updateCheckout('shipping_address_line2', event.target.value)} autoComplete="address-line2" /></div></div>
             <div className="field-row field-row-three"><div><label className="field-label" htmlFor="city">City</label><input id="city" className="text-input" value={checkout.shipping_city} onChange={(event) => updateCheckout('shipping_city', event.target.value)} autoComplete="address-level2" />{checkout.shipping_city && !isValidPlaceName(checkout.shipping_city) && <p className="field-hint is-error">Use letters, spaces, apostrophes, hyphens, or periods.</p>}</div><div><label className="field-label" htmlFor="region">Region</label><input id="region" className="text-input" value={checkout.shipping_region} onChange={(event) => updateCheckout('shipping_region', event.target.value)} autoComplete="address-level1" />{checkout.shipping_region && !isValidPlaceName(checkout.shipping_region) && <p className="field-hint is-error">Use a valid region name.</p>}</div><div><label className="field-label" htmlFor="postal">Postal code</label><input id="postal" className="text-input" value={checkout.shipping_postal_code} onChange={(event) => updateCheckout('shipping_postal_code', event.target.value)} autoComplete="postal-code" />{checkout.shipping_postal_code && !isValidPostalCode(checkout.shipping_postal_code) && <p className="field-hint is-error">Use a valid postal code.</p>}</div></div>
             {checkoutError && <p className="form-message is-error" role="alert">{checkoutError}</p>}
             {checkoutSuccess && <p className="form-message is-success" role="status">{checkoutSuccess}</p>}
-            <button className="primary-action action-wide" type="submit" disabled={submittingCheckout}>{submittingCheckout ? 'Saving details…' : 'Save checkout details'} <span aria-hidden="true">↗</span></button>
+            <button className="primary-action action-wide" type="submit" disabled={submittingCheckout || Boolean(checkoutValidationMessage())}>{submittingCheckout ? 'Saving details…' : 'Save checkout details'} <span aria-hidden="true">↗</span></button>
           </form>
         </section>
       </main>

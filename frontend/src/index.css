@@ -372,6 +372,27 @@ h2 {
     font-size: 0.7rem;
     letter-spacing: 0.1em;
   }
+  .access-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(38, 48, 45, 0.18);
+  }
+  .access-toggle button {
+    padding: 0.8rem 0.5rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #89938d;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .access-toggle button.is-active {
+    border-bottom-color: #6a8b64;
+    color: #536f50;
+  }
   .field-label {
     display: block;
     margin: 0 0 0.45rem;
@@ -504,6 +525,11 @@ h2 {
   }
   .authenticated-state .panel-copy {
     margin: 1rem 0 1.5rem;
+  }
+  .reissue-panel {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(38, 48, 45, 0.14);
   }
 
   .checkout-panel {

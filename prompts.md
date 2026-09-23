@@ -405,3 +405,27 @@ Provide a separate existing-account section with an email field and Generate a n
 ## 2026-09-23 — Move OTP reissue to account access
 
 Move the Generate a new code action out of the checkout delivery modal and place it beside account creation, so checkout only handles entering the existing code or continuing as a guest.
+
+---
+
+## 2026-09-23 — Simplify account access UI
+
+Use one account panel with Register new user and Existing user toggle modes. Keep new-account registration and existing-account OTP generation separate, and hide displayed OTPs automatically after 60 seconds.
+
+---
+
+## 2026-09-23 — Make account modes mutually exclusive
+
+Show only one account action at a time through the Register new user / Existing user toggle, including for restored sessions. Reduce displayed OTP visibility from 60 seconds to 15 seconds.
+
+---
+
+## 2026-09-23 — Hide account controls for signed-in users
+
+Hide registration and OTP-generation controls whenever an active session exists. Show only the signed-in greeting and sign-out action; restore the account toggle after sign-out.
+
+---
+
+## 2026-09-23 — Disable incomplete checkout submission
+
+Keep postal-code validation international because some valid formats contain letters, such as Canadian and UK postcodes. Disable Save checkout details until every required checkout field passes validation, with inline hints for missing or malformed fields.
