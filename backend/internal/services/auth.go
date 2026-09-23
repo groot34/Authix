@@ -48,6 +48,7 @@ type RegisteredUser struct {
 type userRepository interface {
 	Insert(ctx context.Context, email, firstName, lastName string) (*repositories.User, error)
 	FindByEmail(ctx context.Context, email string) (*repositories.User, error)
+	FindByID(ctx context.Context, userID int64) (*repositories.User, error)
 	FindForOTPVerify(ctx context.Context, email string) (*repositories.User, error)
 	UpdateOTP(ctx context.Context, userID int64, codeHash []byte, issuedAt time.Time) error
 	AtomicConsumeOTP(ctx context.Context, userID int64, expectedHash []byte) (bool, error)
@@ -247,6 +248,20 @@ func (s *AuthService) LookupRegistered(ctx context.Context, email string) (bool,
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 	}, nil
+}
+
+func (s *AuthService) FindUserByID(ctx context.Context, userID int64) (*RegisteredUser, error) {
+	if userID <= 0 {
+		return nil, ErrUserNotRegistered
+	}
+	u, err := s.users.FindByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrUserNotFound) {
+			return nil, ErrUserNotRegistered
+		}
+		return nil, fmt.Errorf("services: find user by id: %w", err)
+	}
+	return &RegisteredUser{ID: u.ID, Email: u.Email, FirstName: u.FirstName, LastName: u.LastName}, nil
 }
 
 func (s *AuthService) VerifyOTP(ctx context.Context, email, code string) (*RegisteredUser, error) {

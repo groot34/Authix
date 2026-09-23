@@ -157,3 +157,9 @@ Before adding handlers, enforce a ten-minute OTP lifetime, reject future or inco
 ## 2026-09-23 — Phase 3.3A: Session management foundation
 
 Add the server-side session foundation needed after OTP verification: a new sessions migration, context-aware repository methods for create, validate, and revoke, and a small service that generates opaque crypto-random tokens, stores only their hashes, and applies expiry and revocation checks. Add deterministic service tests and a PostgreSQL lifecycle test. Keep handlers, cookies, routes, frontend work, and commits for later phases.
+
+---
+
+## 2026-09-23 — Phase 3.3B: HTTP handlers and secure session cookies
+
+Connect the existing auth, session, and checkout services to a small JSON HTTP API. Add registration, auth lookup/verify/reissue/me/logout, and checkout routes; set and clear HttpOnly session cookies only after successful OTP verification; derive checkout identity from the session instead of trusting browser user IDs; and add explicit credentialed CORS and configurable cookie settings. Cover the routes with httptest tests and leave frontend, deployment, and commits for later.

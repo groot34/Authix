@@ -12,6 +12,8 @@ import (
 	"github.com/authix/authix/internal/config"
 	"github.com/authix/authix/internal/database"
 	"github.com/authix/authix/internal/handlers"
+	"github.com/authix/authix/internal/repositories"
+	"github.com/authix/authix/internal/services"
 )
 
 func main() {
@@ -64,7 +66,16 @@ func main() {
 		log.Printf("no new migrations to apply")
 	}
 
+	userRepo := repositories.NewUserRepository(pool)
+	checkoutRepo := repositories.NewCheckoutRepository(pool)
+	sessionRepo := repositories.NewSessionRepository(pool)
+	authService := services.NewAuthService(userRepo)
+	checkoutService := services.NewCheckoutService(checkoutRepo)
+	sessionService := services.NewSessionService(sessionRepo)
+	api := handlers.NewAPI(authService, checkoutService, sessionService, cfg.SessionCookieName, cfg.SessionCookieSecure)
+
 	mux := http.NewServeMux()
+	mux.Handle("/api/", api.Routes())
 	mux.HandleFunc("GET /health", handlers.Health(cfg.Env))
 	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -76,8 +87,12 @@ func main() {
 	log.Printf("authix api listening on %s (env=%s)", addr, cfg.Env)
 
 	srv := &http.Server{
-		Addr:    addr,
-		Handler: mux,
+		Addr:              addr,
+		Handler:           handlers.CORS(mux, cfg.AllowedOrigins),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	idleConnsClosed := make(chan struct{})

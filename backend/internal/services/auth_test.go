@@ -18,6 +18,7 @@ import (
 type fakeUserRepo struct {
 	insertFn           func(ctx context.Context, email, first, last string) (*repositories.User, error)
 	findByEmailFn      func(ctx context.Context, email string) (*repositories.User, error)
+	findByIDFn         func(ctx context.Context, id int64) (*repositories.User, error)
 	findForOTPVerifyFn func(ctx context.Context, email string) (*repositories.User, error)
 	updateOTPFn        func(ctx context.Context, id int64, hash []byte, issued time.Time) error
 	atomicConsumeOTPFn func(ctx context.Context, id int64, expectedHash []byte) (bool, error)
@@ -32,6 +33,12 @@ func (f *fakeUserRepo) Insert(ctx context.Context, email, first, last string) (*
 func (f *fakeUserRepo) FindByEmail(ctx context.Context, email string) (*repositories.User, error) {
 	if f.findByEmailFn != nil {
 		return f.findByEmailFn(ctx, email)
+	}
+	return nil, repositories.ErrUserNotFound
+}
+func (f *fakeUserRepo) FindByID(ctx context.Context, id int64) (*repositories.User, error) {
+	if f.findByIDFn != nil {
+		return f.findByIDFn(ctx, id)
 	}
 	return nil, repositories.ErrUserNotFound
 }

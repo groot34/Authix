@@ -98,8 +98,8 @@ migration runner all live in `internal/database/`.
   are preserved even if a user is deleted. Email, phone and shipping
   fields are denormalised onto the submission row so each row records
   exactly what the user submitted, independent of later profile edits.
-- **sessions** (see `0003_sessions.sql`): successful OTP verification will
-  create a server-side session. The client receives only an opaque token for
+- **sessions** (see `0003_sessions.sql`): successful OTP verification creates
+  a server-side session. The client receives only an opaque token for
   an HttpOnly cookie; PostgreSQL stores its hash, user ID, creation time,
   expiry, and optional revocation time. Checkout must use the trusted user ID
   from that session rather than a browser-supplied ID.
@@ -114,6 +114,10 @@ migration runner all live in `internal/database/`.
 5. User enters code → Frontend POSTs to `POST /api/login` → service compares against stored code.
 6. On match → the API creates a server-side session and sets an opaque HttpOnly cookie; frontend receives the user name and shows the greeting.
 7. User submits checkout → the API resolves the optional user ID from the session cookie, never from an untrusted request field, then saves the checkout row.
+
+The backend API now provides registration, authentication lookup/verify/reissue,
+session-backed `/me` and logout, and checkout endpoints. Credentialed CORS is
+limited to explicitly configured origins. The frontend remains the next phase.
 
 ## What Is Implemented vs Planned
 

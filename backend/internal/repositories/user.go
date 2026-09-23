@@ -85,6 +85,16 @@ WHERE email = $1;`
 	return r.queryUser(ctx, q, email)
 }
 
+func (r *UserRepository) FindByID(ctx context.Context, userID int64) (*User, error) {
+	const q = `
+SELECT id, email, first_name, last_name, created_at,
+       otp_code_hash, otp_issued_at, otp_used_at
+FROM users
+WHERE id = $1;`
+
+	return r.queryUser(ctx, q, userID)
+}
+
 func (r *UserRepository) FindForOTPVerify(ctx context.Context, email string) (*User, error) {
 	const q = `
 SELECT id, email, first_name, last_name, created_at,

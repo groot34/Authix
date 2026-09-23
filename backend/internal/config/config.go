@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 type PostgresConfig struct {
 	Host     string
@@ -11,10 +14,13 @@ type PostgresConfig struct {
 }
 
 type Config struct {
-	Port          string
-	Env           string
-	MigrationsDir string
-	Postgres      PostgresConfig
+	Port                string
+	Env                 string
+	MigrationsDir       string
+	AllowedOrigins      []string
+	SessionCookieName   string
+	SessionCookieSecure bool
+	Postgres            PostgresConfig
 }
 
 func getenv(key, def string) string {
@@ -26,13 +32,21 @@ func getenv(key, def string) string {
 }
 
 func Load() Config {
+	env := getenv("BACKEND_ENV", "development")
+	origins := splitCSV(os.Getenv("AUTHIX_ALLOWED_ORIGINS"))
+	if len(origins) == 0 && env != "production" {
+		origins = []string{"http://localhost:5173"}
+	}
 	return Config{
 		Port: getenv("BACKEND_PORT", "8080"),
-		Env:  getenv("BACKEND_ENV", "development"),
+		Env:  env,
 		// Default assumes the binary is invoked as `go run ./cmd/api` from
 		// the backend/ directory. Override with MIGRATIONS_DIR env if
 		// calling from elsewhere or in production.
-		MigrationsDir: getenv("MIGRATIONS_DIR", "../database/migrations"),
+		MigrationsDir:       getenv("MIGRATIONS_DIR", "../database/migrations"),
+		AllowedOrigins:      origins,
+		SessionCookieName:   getenv("AUTHIX_SESSION_COOKIE", "authix_session"),
+		SessionCookieSecure: getenv("AUTHIX_COOKIE_SECURE", "") == "1" || (env == "production" && getenv("AUTHIX_COOKIE_SECURE", "") != "0"),
 		Postgres: PostgresConfig{
 			Host:     getenv("POSTGRES_HOST", "localhost"),
 			Port:     getenv("POSTGRES_PORT", "5432"),
@@ -41,4 +55,14 @@ func Load() Config {
 			DBName:   getenv("POSTGRES_DB", "authix"),
 		},
 	}
+}
+
+func splitCSV(value string) []string {
+	var out []string
+	for _, item := range strings.Split(value, ",") {
+		if trimmed := strings.TrimSpace(item); trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	return out
 }

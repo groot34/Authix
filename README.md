@@ -10,7 +10,7 @@ The project meets the assessment requirements while keeping the architecture cle
 
 ## Status
 
-**Phase 2 — Foundation + PostgreSQL wiring complete; registration/checkout endpoints next**
+**Phase 3.3B — Backend HTTP API, secure session cookies, and CORS complete; frontend next**
 
 ### Technology Stack
 
@@ -33,16 +33,16 @@ The project meets the assessment requirements while keeping the architecture cle
 - Docker Compose: local PostgreSQL service (wired to API via env vars)
 - Database schema: `users` + `checkouts` tables as ordered SQL migrations
 - Backend ↔ PostgreSQL connection pool, startup liveness check, and idempotent migration runner
+- Backend: registration, authentication, session, checkout, and lookup HTTP endpoints
+- Backend: HttpOnly session cookies with configurable development/production security
+- Backend: explicit credentialed CORS for configured frontend origins
 
 ## Planned Features
 
-- User registration (email, first name, last name)
-- Six-digit OTP code generation and display
-- Checkout form (email, phone, shipping address)
+- Frontend registration and checkout forms
 - Real-time email format validation
 - Background email-owner check modal with skip option
-- OTP verification and in-app user greeting
-- Checkout submission and persistence
+- In-app user greeting and session-aware checkout UI
 - Public deployment (Vercel + Supabase or similar free tier)
 
 ## High-Level Architecture
