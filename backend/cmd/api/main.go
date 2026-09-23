@@ -25,6 +25,7 @@ func main() {
 		User:     cfg.Postgres.User,
 		Password: cfg.Postgres.Password,
 		DBName:   cfg.Postgres.DBName,
+		SSLMode:  cfg.Postgres.SSLMode,
 	}
 
 	pool, err := database.Open(dbParams)

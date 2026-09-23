@@ -11,6 +11,7 @@ type PostgresConfig struct {
 	User     string
 	Password string
 	DBName   string
+	SSLMode  string
 }
 
 type Config struct {
@@ -53,6 +54,7 @@ func Load() Config {
 			User:     getenv("POSTGRES_USER", "authix_user"),
 			Password: os.Getenv("POSTGRES_PASSWORD"),
 			DBName:   getenv("POSTGRES_DB", "authix"),
+			SSLMode:  getenv("POSTGRES_SSLMODE", "disable"),
 		},
 	}
 }

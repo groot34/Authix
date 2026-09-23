@@ -21,9 +21,9 @@ type Pool interface {
 
 type poolWrap struct{ db *sql.DB }
 
-func (p *poolWrap) DB() *sql.DB                      { return p.db }
+func (p *poolWrap) DB() *sql.DB                           { return p.db }
 func (p *poolWrap) PingContext(ctx context.Context) error { return p.db.PingContext(ctx) }
-func (p *poolWrap) Close() error                     { return p.db.Close() }
+func (p *poolWrap) Close() error                          { return p.db.Close() }
 
 // Params carries everything we need to open a PostgreSQL pool. It mirrors
 // the PostgresConfig from internal/config, kept here so the package doesn't
@@ -34,13 +34,18 @@ type Params struct {
 	User     string
 	Password string
 	DBName   string
+	SSLMode  string
 }
 
 // URL builds the libpq connection string used by database/sql + lib/pq.
 func (p Params) URL() string {
+	sslMode := p.SSLMode
+	if sslMode == "" {
+		sslMode = "disable"
+	}
 	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		p.Host, p.Port, p.User, p.Password, p.DBName,
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		p.Host, p.Port, p.User, p.Password, p.DBName, sslMode,
 	)
 }
 

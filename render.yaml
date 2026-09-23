@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: authix-api
+    runtime: go
+    plan: free
+    buildCommand: cd backend && go build -o ../authix-api ./cmd/api
+    startCommand: ./authix-api
+    healthCheckPath: /health
+    envVars:
+      - key: BACKEND_ENV
+        value: production
+      - key: AUTHIX_COOKIE_SECURE
+        value: "1"
+      - key: AUTHIX_ALLOWED_ORIGINS
+        sync: false
+      - key: POSTGRES_HOST
+        sync: false
+      - key: POSTGRES_PORT
+        value: "5432"
+      - key: POSTGRES_USER
+        sync: false
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_DB
+        sync: false
+      - key: POSTGRES_SSLMODE
+        value: require
+      - key: MIGRATIONS_DIR
+        value: database/migrations

@@ -30,6 +30,7 @@ function App() {
   const [reissuedCode, setReissuedCode] = useState('');
   const [reissuingCode, setReissuingCode] = useState(false);
   const [authenticatedUser, setAuthenticatedUser] = useState<RegisteredUser | null>(null);
+  const [signedOutEmail, setSignedOutEmail] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [dismissedEmail, setDismissedEmail] = useState('');
   const [checkout, setCheckout] = useState<CheckoutState>(emptyCheckout);
@@ -150,7 +151,11 @@ function App() {
     setCheckout((current) => ({ ...current, [field]: value }));
     setCheckoutError('');
     setCheckoutSuccess('');
-    if (field === 'email' && value.trim().toLowerCase() !== dismissedEmail) setDismissedEmail('');
+    if (field === 'email') {
+      const normalizedEmail = value.trim().toLowerCase();
+      if (normalizedEmail !== dismissedEmail) setDismissedEmail('');
+      if (normalizedEmail !== signedOutEmail) setSignedOutEmail('');
+    }
   }
 
   function checkoutValidationMessage() {
@@ -177,6 +182,10 @@ function App() {
       setCheckoutError(`This session belongs to ${authenticatedUser.email}. Use that email or sign out before continuing.`);
       return;
     }
+    if (signedOutEmail && checkout.email.trim().toLowerCase() === signedOutEmail) {
+      setCheckoutError('Your session has ended. Sign in again before saving checkout details for this account, or use a different email to continue as a guest.');
+      return;
+    }
     setSubmittingCheckout(true);
     try {
       await api.checkout({
@@ -198,6 +207,7 @@ function App() {
 
   function handleLogin(user: RegisteredUser) {
     setAuthenticatedUser(user);
+    setSignedOutEmail('');
     setCheckout((current) => ({ ...current, email: user.email }));
     setDismissedEmail(user.email.trim().toLowerCase());
     setModalOpen(false);
@@ -220,7 +230,7 @@ function App() {
 
         <section className="auth-panel" aria-label="Account access">
           {authenticatedUser ? (
-            <div className="authenticated-state"><p className="eyebrow">Signed in</p><h2>Good to see you, {authenticatedUser.first_name}.</h2><p className="panel-copy">Your secure session is active and ready to attach to this checkout.</p><button className="secondary-action" type="button" onClick={() => api.logout().then(() => setAuthenticatedUser(null))}>Sign out</button></div>
+            <div className="authenticated-state"><p className="eyebrow">Signed in</p><h2>Good to see you, {authenticatedUser.first_name}.</h2><p className="panel-copy">Your secure session is active and ready to attach to this checkout.</p><button className="secondary-action" type="button" onClick={() => api.logout().then(() => { setSignedOutEmail(authenticatedUser.email.trim().toLowerCase()); setAuthenticatedUser(null); })}>Sign out</button></div>
           ) : (
             <>
               <div className="access-toggle" role="tablist" aria-label="Account access mode">

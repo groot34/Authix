@@ -210,11 +210,19 @@ func (a *API) Routes() http.Handler {
 }
 
 func (a *API) setSessionCookie(w http.ResponseWriter, token string, expires time.Time) {
-	http.SetCookie(w, &http.Cookie{Name: a.cookieName, Value: token, Path: "/", Expires: expires, MaxAge: maxAge(expires), HttpOnly: true, Secure: a.cookieSecure, SameSite: http.SameSiteLaxMode})
+	sameSite := http.SameSiteLaxMode
+	if a.cookieSecure {
+		sameSite = http.SameSiteNoneMode
+	}
+	http.SetCookie(w, &http.Cookie{Name: a.cookieName, Value: token, Path: "/", Expires: expires, MaxAge: maxAge(expires), HttpOnly: true, Secure: a.cookieSecure, SameSite: sameSite})
 }
 
 func (a *API) clearSessionCookie(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{Name: a.cookieName, Value: "", Path: "/", MaxAge: -1, Expires: time.Unix(1, 0), HttpOnly: true, Secure: a.cookieSecure, SameSite: http.SameSiteLaxMode})
+	sameSite := http.SameSiteLaxMode
+	if a.cookieSecure {
+		sameSite = http.SameSiteNoneMode
+	}
+	http.SetCookie(w, &http.Cookie{Name: a.cookieName, Value: "", Path: "/", MaxAge: -1, Expires: time.Unix(1, 0), HttpOnly: true, Secure: a.cookieSecure, SameSite: sameSite})
 }
 
 func (a *API) sessionToken(r *http.Request) (string, bool) {

@@ -426,6 +426,20 @@ Hide registration and OTP-generation controls whenever an active session exists.
 
 ---
 
+## 2026-09-23 — Prepare deployment configuration
+
+Prepare a provider-neutral deployment path using Vercel for the frontend, Render for the Go API, and managed PostgreSQL such as Neon or Supabase. Add production SSL and cross-origin cookie support, deployment manifests, environment documentation, and a smoke-test runbook without inventing credentials or deployment results.
+
+Outcome: backend and frontend verification passed; no public deployment was performed because provider authentication and account details are required.
+
+---
+
 ## 2026-09-23 — Disable incomplete checkout submission
 
 Keep postal-code validation international because some valid formats contain letters, such as Canadian and UK postcodes. Disable Save checkout details until every required checkout field passes validation, with inline hints for missing or malformed fields.
+
+---
+
+## 2026-09-23 — Guard checkout after logout
+
+When a user signs out with checkout details still on screen, reject submission using that same account email with an explicit session-ended message. Preserve guest checkout when the user changes to a different email.

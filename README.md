@@ -44,6 +44,8 @@ The OTP registration flow, authenticated checkout flow, guest checkout, session 
 - Production environment variables for frontend API origin, backend CORS, and PostgreSQL connection details
 - Live smoke test against a running PostgreSQL instance and deployed HTTP origins
 
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the provider setup, Render/Vercel configuration, managed PostgreSQL variables, and post-deployment smoke test checklist.
+
 ## High-Level Architecture
 
 ```
