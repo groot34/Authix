@@ -36,20 +36,19 @@ Authix is a three-layer web application:
 ### Frontend
 
 Single-page React app built with Vite. Responsibility:
-- Render forms (registration, checkout) and UI (landing page, OTP modal).
-- Client-side validation (email format in real time).
-- Call the Go API over HTTP/JSON.
-- React to responses: show OTP modal when a registered email is detected; show logged-in name; show errors.
-- No business logic about OTP correctness or user registration state beyond what the API returns.
+- Render registration, checkout, and OTP modal UI.
+- Validate email format in real time and trigger registered-email recognition.
+- Call the Go API over HTTP/JSON with credentialed requests.
+- React to responses: show OTP modal for recognized users, allow guest checkout, sign in with a valid OTP, and show the authenticated user name at checkout.
+- Keep payment logic out of scope and persist only checkout data through the API.
 
 Folders inside `frontend/src/`:
 - `components/` — shared presentational components.
-- `features/` — feature-scoped modules (registration, checkout).
-- `lib/` — shared utilities.
-- `services/` — API client wrappers.
-- `types/` — shared TypeScript types.
+- `features/` — feature-scoped modules (registration, checkout, email recognition).
+- `lib/` — API client and validation helpers.
+- `styles/` — app styling via the main CSS entry point.
 
-Implemented in Phase 1: scaffold and landing page only. Forms are planned.
+The current working tree includes the full app flow: registration form, live email recognition hook, OTP modal, authenticated/guest checkout, and cookie-backed session restoration.
 
 ### Go API
 
@@ -121,10 +120,10 @@ limited to explicitly configured origins. The frontend remains the next phase.
 
 ## What Is Implemented vs Planned
 
-Implemented (Phase 1):
-- ✅ Frontend scaffold (Vite + React + TS) + landing page
-- ✅ Backend entry point and router
-- ✅ Backend `GET /health` + unit test
+Implemented (current working tree):
+- ✅ Frontend registration and checkout application with OTP modal and guest flow
+- ✅ Backend entry point, router, JSON API, and secure session cookies
+- ✅ Backend `GET /health` + unit tests
 - ✅ Docker Compose Postgres service definition
 
 Implemented (Phase 2 — DB wiring):
@@ -146,14 +145,15 @@ Implemented (Phase 2 — DB wiring):
   and a live-DB integration test against a throwaway cluster (when PG
   binaries are on PATH; skipped in `-short` mode).
 
-Planned:
-- Registration form page and API endpoint
+Implemented and verified:
+- Registration form and API endpoint
 - OTP generation (6-digit numeric, hashed on save)
-- Email-owner lookup endpoint
-- OTP verify endpoint
+- Registered-email lookup endpoint
+- OTP verify and reissue endpoints
 - Checkout form + validation + OTP modal UI
 - Checkout submission endpoint
-- Deployment + hosting
+- Session restoration for authenticated users
+- Deployment config and environment examples, without public hosting being performed here
 
 ## Principles
 

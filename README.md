@@ -10,7 +10,9 @@ The project meets the assessment requirements while keeping the architecture cle
 
 ## Status
 
-**Phase 3.3B — Backend HTTP API, secure session cookies, and CORS complete; frontend next**
+**Phase 5 — Integration testing and deployment readiness**
+
+The OTP registration flow, authenticated checkout flow, guest checkout, session restoration, and API/database integration are implemented and verified in the current working tree. Local deployment smoke testing is still blocked in this environment because Docker Desktop is not running, so the DB-backed public deployment path has not been launched here.
 
 ### Technology Stack
 
@@ -25,25 +27,22 @@ The project meets the assessment requirements while keeping the architecture cle
 
 ## Implemented Features
 
-- Frontend: Vite + React + TypeScript scaffold
-- Frontend: minimal Authix landing page
-- Backend: Go module `github.com/groot34/Authix`, entry point
-- Backend: `GET /health` JSON endpoint
-- Backend: unit test for `/health`
-- Docker Compose: local PostgreSQL service (wired to API via env vars)
-- Database schema: `users` + `checkouts` tables as ordered SQL migrations
-- Backend ↔ PostgreSQL connection pool, startup liveness check, and idempotent migration runner
-- Backend: registration, authentication, session, checkout, and lookup HTTP endpoints
-- Backend: HttpOnly session cookies with configurable development/production security
-- Backend: explicit credentialed CORS for configured frontend origins
+- Frontend: Vite + React + TypeScript app with account registration, checkout form, OTP modal, guest/registered flow, and session-aware greeting
+- Frontend: real-time email validation and background recognition for registered-email flows
+- Backend: Go module `github.com/groot34/Authix` with API server entry point, health route, and JSON handlers
+- Backend: registration, OTP lookup, verify, reissue, logout, and checkout endpoints
+- Backend: HttpOnly session cookies with environment-aware Secure handling and configured same-site policy
+- Backend: explicit credentialed CORS with configured frontend origins
+- Database: PostgreSQL schema for `users`, `checkouts`, and `sessions` with ordered migrations and startup migration runner
+- Backend ↔ PostgreSQL connection pool, readiness checks, and idempotent migration execution
+- Business logic: OTP generation, hashing, expiry, rate limiting, atomic one-time consumption, checkout validation, and guest/authenticated checkout handling
 
-## Planned Features
+## Remaining Deployment Tasks
 
-- Frontend registration and checkout forms
-- Real-time email format validation
-- Background email-owner check modal with skip option
-- In-app user greeting and session-aware checkout UI
-- Public deployment (Vercel + Supabase or similar free tier)
+- Public hosting for the frontend and API
+- Provider-specific deployment credentials and DNS or domain setup
+- Production environment variables for frontend API origin, backend CORS, and PostgreSQL connection details
+- Live smoke test against a running PostgreSQL instance and deployed HTTP origins
 
 ## High-Level Architecture
 
@@ -105,8 +104,9 @@ Copy `.env.example` to `.env` and fill in values. The backend reads `BACKEND_POR
 
 ## Tests
 
-- Frontend: none yet.
-- Backend: `cd backend && go test ./...`
+- Frontend: `cd frontend && npm install && npm run build` — passed in this environment.
+- Backend: `cd backend && go test ./... && go build ./...` — passed in this environment.
+- Live DB-backed end-to-end smoke tests against Docker/PostgreSQL were not runnable here because Docker Desktop is not active; the attempted `docker compose up -d` failed with a missing Docker engine socket.
 
 ## Assessment Deliverables (Pending)
 
