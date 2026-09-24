@@ -2,32 +2,32 @@
 
 ## Overview
 
-Authix is a three-layer web application in its current deployed form:
+Authix is a three-layer web application:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Frontend                        │
-│              React + TypeScript + Vite                 │
-│  Landing page, registration form, checkout form, OTP modal  │
-│  Real-time email validation, async user lookup    │
-└──────────────────────┬──────────────────────────────────┘
-                       │ HTTP / JSON
-                       ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                        Go API                              │
-│  cmd/api/main.go  — entry point, HTTP server, router       │
-│  internal/config  — env-based configuration                      │
-│  internal/handlers — HTTP layer: decode req, encode resp     │
-│  internal/services — business rules, OTP generation, validation │
-│  internal/repositories — data access (SQL queries)         │
-│  internal/database — PostgreSQL connection pool             │
-└──────────────────────┬───────────────────────────────────────┘
-                       │ SQL
-                       ▼
+│                         Frontend                             │
+│                 React + TypeScript + Vite                    │
+│       Landing page, registration, checkout, and OTP modal    │
+│          Real-time email validation and async lookup         │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ HTTP / JSON
+                               ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                      PostgreSQL                             │
-│  users, checkouts tables (planned)                       │
-│  managed via SQL migrations in database/migrations/      │
+│                           Go API                             │
+│        cmd/api/main.go - entry point, HTTP server, router    │
+│        internal/config - environment-based configuration     │
+│        internal/handlers - HTTP request and response layer   │
+│        internal/services - business rules and validation     │
+│        internal/repositories - SQL data access               │
+│        internal/database - PostgreSQL connection pool        │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ SQL
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                         PostgreSQL                           │
+│                 users, checkouts, and sessions               │
+│             Managed via SQL migrations in database/          │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -42,30 +42,30 @@ Single-page React app built with Vite. Responsibility:
 - React to responses: show OTP modal for recognized users, allow guest checkout, sign in with a valid OTP, and show the authenticated user name at checkout.
 - Keep payment logic out of scope and persist only checkout data through the API.
 
-The current implementation is live on Vercel and includes the full app flow: registration form, live email recognition hook, OTP modal, authenticated/guest checkout, and cookie-backed session restoration.
-
 Folders inside `frontend/src/`:
 - `components/` — shared presentational components.
 - `features/` — feature-scoped modules (registration, checkout, email recognition).
 - `lib/` — API client and validation helpers.
 - `styles/` — app styling via the main CSS entry point.
 
+The current working tree includes the full app flow: registration form, live email recognition hook, OTP modal, authenticated/guest checkout, and cookie-backed session restoration.
+
 ### Go API
 
 Standard-library `net/http` server. Responsibility:
-- Expose HTTP endpoints, validate request payloads, and return JSON.
-- Encode business rules such as OTP generation, matching, and checkout validation.
+- Expose HTTP endpoints, validate request payloads, return JSON.
+- Encode business rules (generate OTP, match OTP, save checkout).
 - Read/write PostgreSQL through a data-access layer so HTTP handlers stay thin.
 
 Package layout:
-- `cmd/api/main.go` — wire dependencies and start the server.
+- `cmd/api/main.go` — wire dependencies and start server.
 - `internal/config/` — read PORT, POSTGRES_* from env.
-- `internal/handlers/` — per-endpoint HTTP handlers.
-- `internal/services/` — business logic for auth and checkout flows.
-- `internal/repositories/` — SQL access for users and checkouts.
-- `internal/database/` — PostgreSQL connection pool and migration runner.
+- `internal/handlers/` — per-endpoint funcs returning `http.HandlerFunc`.
+- `internal/services/` — pure-logic services (planned after foundation).
+- `internal/repositories/` — SQL wrapping (planned).
+- `internal/database/` — open pool (planned).
 
-The API now includes registration, lookup, verification, reissue, session, logout, and checkout endpoints, and it responds on `/health`.
+Implemented in Phase 1: `GET /health` only. All other endpoints planned.
 
 ### PostgreSQL
 
@@ -104,17 +104,19 @@ migration runner all live in `internal/database/`.
   from that session rather than a browser-supplied ID.
 
 
-## Typical Request Flow
+## Typical Request Flow (Planned)
 
 1. User submits registration form → Frontend POSTs JSON to `POST /api/register`.
-2. Handler validates payload → service generates a 6-digit numeric code → repository inserts user → handler returns the code to the frontend.
-3. On checkout, after the email becomes valid → Frontend calls the auth lookup endpoint to check whether the email belongs to a registered user.
-4. If registered → Frontend opens the OTP modal.
-5. User enters code → Frontend POSTs to the verify endpoint → the service compares against the stored hashed OTP.
-6. On match → the API creates a server-side session and sets an opaque HttpOnly cookie; frontend receives the user and shows the signed-in greeting.
+2. Handler validates payload → service generates 6-digit numeric code → repository inserts user → handler returns code to frontend.
+3. On checkout, after email field becomes valid → Frontend calls `GET /api/users/lookup?email=...`.
+4. If registered → Frontend opens OTP modal.
+5. User enters code → Frontend POSTs to `POST /api/login` → service compares against stored code.
+6. On match → the API creates a server-side session and sets an opaque HttpOnly cookie; frontend receives the user name and shows the greeting.
 7. User submits checkout → the API resolves the optional user ID from the session cookie, never from an untrusted request field, then saves the checkout row.
 
-The backend API now provides registration, lookup, verify, reissue, session-backed `/me`, logout, and checkout endpoints. Credentialed CORS is limited to explicitly configured origins.
+The backend API now provides registration, authentication lookup/verify/reissue,
+session-backed `/me` and logout, and checkout endpoints. Credentialed CORS is
+limited to explicitly configured origins. The frontend remains the next phase.
 
 ## What Is Implemented vs Planned
 

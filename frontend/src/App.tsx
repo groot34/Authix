@@ -56,6 +56,7 @@ function App() {
   }, [reissuedCode]);
 
   useEffect(() => {
+    void api.health().catch(() => undefined);
     api.me().then((result) => {
       setAuthenticatedUser(result.user);
       setAccessMode('existing');

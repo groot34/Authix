@@ -63,6 +63,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  health() {
+    return request<{ status: string }>('/health', { method: 'GET' });
+  },
+
   register(input: RegisterRequest) {
     return request<{ otp_code: string; user: RegisteredUser }>('/api/register', {
       method: 'POST',

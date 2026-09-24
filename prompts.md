@@ -508,3 +508,8 @@ Remove the OTP modal close icon and backdrop dismissal so Continue as guest is t
 
 Use the toast as the only account-level error notification for duplicate registration, invalid registration input, and OTP generation failures. Keep field hints and OTP modal verification errors where they help the user correct input.
 
+---
+
+## 2026-09-24 — Warm the deployed backend on frontend load
+
+Add a non-blocking frontend `GET /health` request on initial load so the Render backend starts waking while the deployed UI is being opened. Keep session restoration through `/api/auth/me` unchanged.

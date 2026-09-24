@@ -49,12 +49,30 @@ The remaining external requirement is reviewer access for `boltapp-hiring`, if t
 ## High-Level Architecture
 
 ```
-┌─────────────────┐    HTTP/JSON     ┌──────────────────┐     SQL      ┌────────────┐
-│  Frontend  │ ───────────────▶ │  Go API       │ ──────────▶ │ PostgreSQL │
-│ React/Vite   │ ◀────────────── │  (handlers/   │ ◀──────── │          │
-└────────────┘                   │  services/     │            └────────────┘
-                                 │  repositories/│
-                                 └──────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                         Frontend                             │
+│                 React + TypeScript + Vite                    │
+│       Landing page, registration, checkout, and OTP modal    │
+│          Real-time email validation and async lookup         │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ HTTP / JSON
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                           Go API                             │
+│        cmd/api/main.go - entry point, HTTP server, router    │
+│        internal/config - environment-based configuration     │
+│        internal/handlers - HTTP request and response layer   │
+│        internal/services - business rules and validation     │
+│        internal/repositories - SQL data access               │
+│        internal/database - PostgreSQL connection pool        │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ SQL
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                         PostgreSQL                           │
+│                 users, checkouts, and sessions               │
+│             Managed via SQL migrations in database/          │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 Frontend talks to the Go API over HTTP. The API is split into handlers (HTTP layer), services (business logic), and repositories (data access). PostgreSQL provides persistent storage.
