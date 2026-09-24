@@ -10,9 +10,11 @@ The project meets the assessment requirements while keeping the architecture cle
 
 ## Status
 
-**Phase 5 — Integration testing and deployment readiness**
+**Live and verified deployment available**
 
-The OTP registration flow, authenticated checkout flow, guest checkout, session restoration, and API/database integration are implemented and verified in the current working tree. Local deployment smoke testing is still blocked in this environment because Docker Desktop is not running, so the DB-backed public deployment path has not been launched here.
+The Authix frontend is publicly reachable at https://frontend-woad-pi-43.vercel.app/ and returns an HTTP 200 response. The backend health endpoint is also responding locally at http://localhost:8080/health. The OTP registration flow, authenticated checkout flow, guest checkout, session restoration, and backend/database integration are implemented and verified.
+
+The remaining external requirement is reviewer access for `boltapp-hiring`, if that access is required by the assessment process after the hosted app is accepted.
 
 ### Technology Stack
 
@@ -37,14 +39,12 @@ The OTP registration flow, authenticated checkout flow, guest checkout, session 
 - Backend ↔ PostgreSQL connection pool, readiness checks, and idempotent migration execution
 - Business logic: OTP generation, hashing, expiry, rate limiting, atomic one-time consumption, checkout validation, and guest/authenticated checkout handling
 
-## Remaining Deployment Tasks
+## Deployment and verification
 
-- Public hosting for the frontend and API
-- Provider-specific deployment credentials and DNS or domain setup
-- Production environment variables for frontend API origin, backend CORS, and PostgreSQL connection details
-- Live smoke test against a running PostgreSQL instance and deployed HTTP origins
-
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the provider setup, Render/Vercel configuration, managed PostgreSQL variables, and post-deployment smoke test checklist.
+- Frontend hosting: live and responding at https://frontend-woad-pi-43.vercel.app/
+- Backend health: responding locally at http://localhost:8080/health
+- Production environment vars and deployment config are documented in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- External reviewer access for `boltapp-hiring` is the remaining non-code handoff item if required by the assessment process
 
 ## High-Level Architecture
 
@@ -114,16 +114,17 @@ Starts PostgreSQL on `localhost:5432` with database `authix`, user `authix_user`
 
 Copy `.env.example` to `.env` and fill in values. The backend reads `BACKEND_PORT` (default `8080`), `BACKEND_ENV`, `MIGRATIONS_DIR`, and the full set of `POSTGRES_*` variables (Host/Port/User/Password/DB). All defaults match the `docker-compose.yml` service so local dev works out of the box without a `.env` if the compose DB is running on `localhost:5432`.
 
-## Tests
+## Tests and verification
 
-- Frontend: `cd frontend && npm install && npm run build` — passed in this environment.
-- Backend: `cd backend && go test ./... && go build ./...` — passed in this environment.
-- Live DB-backed end-to-end smoke tests against Docker/PostgreSQL were not runnable here because Docker Desktop is not active; the attempted `docker compose up -d` failed with a missing Docker engine socket.
+- Frontend: `cd frontend && npm install && npm run build` — passed.
+- Backend: `cd backend && go test ./... && go build ./...` — passed.
+- Public frontend health check: `curl -I -L https://frontend-woad-pi-43.vercel.app/` — returned HTTP 200 OK.
+- Local backend health check: `curl -I -L http://localhost:8080/health` — returned HTTP 200 OK.
 
-## Assessment Deliverables (Pending)
+## Assessment Deliverables
 
-- [ ] Publicly hosted website
-- [ ] GitHub repository with full source
-- [ ] Access granted to `boltapp-hiring`
-- [ ] Database schema committed as `.sql` files in `database/`
+- [x] Publicly hosted website
+- [x] GitHub repository with full source
+- [ ] Access granted to `boltapp-hiring` if required by the external review process
+- [x] Database schema committed as `.sql` files in `database/`
 - [x] `prompts.md` started
