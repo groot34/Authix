@@ -78,12 +78,22 @@ npm run build      # production build into dist/
 
 ### Backend
 
+From the repo root, the simplest local start is:
+
+```bash
+docker compose up -d
+bash run-backend-local.sh
+# API listens on :8080 (configurable via BACKEND_PORT env)
+```
+
+If you prefer to start it manually, run:
+
 ```bash
 cd backend
-go mod download   # if dependencies are added
-go test ./...
+set -a
+. ../.env
+set +a
 go run ./cmd/api
-# API listens on :8080 (configurable via BACKEND_PORT env)
 ```
 
 Health check:

@@ -31,6 +31,7 @@ func TestLoad_Defaults(t *testing.T) {
 	// Clear anything set in the test environment.
 	restore := setEnvs(t, map[string]string{
 		"BACKEND_PORT":           "",
+		"PORT":                   "",
 		"BACKEND_ENV":            "",
 		"MIGRATIONS_DIR":         "",
 		"POSTGRES_HOST":          "",
@@ -81,6 +82,7 @@ func TestLoad_Defaults(t *testing.T) {
 func TestLoad_OverrideAll(t *testing.T) {
 	restore := setEnvs(t, map[string]string{
 		"BACKEND_PORT":           "9090",
+		"PORT":                   "9191",
 		"BACKEND_ENV":            "test",
 		"MIGRATIONS_DIR":         "/tmp/migs",
 		"AUTHIX_ALLOWED_ORIGINS": " http://localhost:5173, https://app.example.com ",

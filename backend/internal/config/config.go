@@ -34,12 +34,13 @@ func getenv(key, def string) string {
 
 func Load() Config {
 	env := getenv("BACKEND_ENV", "development")
+	port := getenv("BACKEND_PORT", getenv("PORT", "8080"))
 	origins := splitCSV(os.Getenv("AUTHIX_ALLOWED_ORIGINS"))
 	if len(origins) == 0 && env != "production" {
 		origins = []string{"http://localhost:5173"}
 	}
 	return Config{
-		Port: getenv("BACKEND_PORT", "8080"),
+		Port: port,
 		Env:  env,
 		// Default assumes the binary is invoked as `go run ./cmd/api` from
 		// the backend/ directory. Override with MIGRATIONS_DIR env if

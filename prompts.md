@@ -443,3 +443,68 @@ Keep postal-code validation international because some valid formats contain let
 ## 2026-09-23 — Guard checkout after logout
 
 When a user signs out with checkout details still on screen, reject submission using that same account email with an explicit session-ended message. Preserve guest checkout when the user changes to a different email.
+
+---
+
+## 2026-09-23 — Add country selector
+
+Replace free-text country-code entry with a searchable selector using the provided country list. Display country names and codes while submitting the selected two-letter code to the API.
+
+---
+
+## 2026-09-23 — Clear checkout details after use
+
+Clear all checkout fields after a successful submission and when the user signs out, so previously used delivery and contact details do not remain visible in the form.
+
+---
+
+## 2026-09-23 — Add React success and error toasts
+
+Add auto-dismissing React toast notifications for account creation, OTP generation, OTP errors, logout, checkout validation, and saved checkout details. Use checkout wording instead of purchase wording because no payment is processed.
+
+Outcome: frontend production build passed.
+
+---
+
+## 2026-09-23 — Prevent repeated OTP modal reopening
+
+Keep a dismissed or successfully submitted registered email suppressed when the checkout form is cleared. Start a new recognition flow only when the user enters a different email.
+
+Outcome: frontend production build passed.
+
+---
+
+## 2026-09-23 — Make OTP suppression race-safe
+
+Guard the recognition modal with an immediate email ref as well as React state so stale debounced lookup responses cannot reopen it after checkout submission or guest dismissal.
+
+Outcome: frontend production build passed.
+
+---
+
+## 2026-09-23 — Limit OTP prompt per email session
+
+Track the last registered email that opened the OTP modal and prevent repeated prompts for that same email during the page session. Reset the guard only when a different email is entered or the user signs out.
+
+Outcome: frontend production build passed.
+
+---
+
+## 2026-09-23 — Confirm guest checkout choice
+
+When a registered user chooses Continue as guest, hide the verification hint for that email and show a success toast confirming guest checkout. Restore recognition behavior when a different email is entered.
+
+Outcome: frontend production build passed.
+
+---
+
+## 2026-09-23 — Make guest continuation explicit
+
+Remove the OTP modal close icon and backdrop dismissal so Continue as guest is the only way to leave the verification modal without authenticating.
+
+---
+
+## 2026-09-23 — Remove duplicate account error text
+
+Use the toast as the only account-level error notification for duplicate registration, invalid registration input, and OTP generation failures. Keep field hints and OTP modal verification errors where they help the user correct input.
+
