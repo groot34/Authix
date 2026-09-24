@@ -1,8 +1,13 @@
 # Deployment
 
-This deployment plan uses Vercel for the Vite frontend, Render for the Go API, and a managed PostgreSQL provider such as Neon or Supabase.
+This project is currently deployed with:
 
-No provider URLs, credentials, or deployment results are committed to this repository.
+- Frontend: https://frontend-woad-pi-43.vercel.app/
+- Backend: https://authix-wel2.onrender.com
+
+The deployment plan uses Vercel for the Vite frontend, Render for the Go API, and a managed PostgreSQL provider such as Neon or Supabase.
+
+The live URLs above are the current public endpoints used for verification; provider credentials and internal deployment metadata are not committed to the repository.
 
 ## 1. Create the database
 

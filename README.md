@@ -12,7 +12,7 @@ The project meets the assessment requirements while keeping the architecture cle
 
 **Live and verified deployment available**
 
-The Authix frontend is publicly reachable at https://frontend-woad-pi-43.vercel.app/ and returns an HTTP 200 response. The backend health endpoint is also responding locally at http://localhost:8080/health. The OTP registration flow, authenticated checkout flow, guest checkout, session restoration, and backend/database integration are implemented and verified.
+The Authix frontend is publicly reachable at https://frontend-woad-pi-43.vercel.app/ and returns an HTTP 200 response. The backend API is live at https://authix-wel2.onrender.com and responds on `/health`. The OTP registration flow, authenticated checkout flow, guest checkout, session restoration, and database-backed integration are implemented and verified.
 
 The remaining external requirement is reviewer access for `boltapp-hiring`, if that access is required by the assessment process after the hosted app is accepted.
 

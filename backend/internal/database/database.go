@@ -82,11 +82,11 @@ func WaitForReady(ctx context.Context, pool Pool) error {
 
 	var lastErr error
 	for {
-		if err := pool.PingContext(ctx); err == nil {
+		err := pool.PingContext(ctx)
+		if err == nil {
 			return nil
-		} else {
-			lastErr = err
 		}
+		lastErr = err
 
 		select {
 		case <-ctx.Done():
