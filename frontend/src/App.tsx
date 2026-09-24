@@ -37,6 +37,7 @@ function App() {
   const suppressedRecognitionEmail = useRef('');
   const promptedRecognitionEmail = useRef('');
   const [checkout, setCheckout] = useState<CheckoutState>(emptyCheckout);
+  const [touchedCheckoutFields, setTouchedCheckoutFields] = useState<Partial<Record<keyof CheckoutState, boolean>>>({});
   const [checkoutError, setCheckoutError] = useState('');
   const [checkoutSuccess, setCheckoutSuccess] = useState('');
   const [submittingCheckout, setSubmittingCheckout] = useState(false);
@@ -155,6 +156,7 @@ function App() {
 
   function updateCheckout(field: keyof CheckoutState, value: string) {
     setCheckout((current) => ({ ...current, [field]: value }));
+    setTouchedCheckoutFields((current) => ({ ...current, [field]: true }));
     setCheckoutError('');
     setCheckoutSuccess('');
     if (field === 'email') {
@@ -171,6 +173,7 @@ function App() {
 
   function clearCheckoutForm() {
     setCheckout({ ...emptyCheckout });
+    setTouchedCheckoutFields({});
     setCheckoutError('');
   }
 
@@ -289,8 +292,8 @@ function App() {
               {recognition.status === 'registered' && recognition.user && !authenticatedUser && recognition.email.trim().toLowerCase() !== guestEmail && <p className="field-hint is-recognized">Account recognized. Verification will open shortly.</p>}
               {recognition.status === 'error' && <p className="field-hint is-error">{recognition.error}</p>}
             </div>
-            <div className="field-row"><div><label className="field-label" htmlFor="phone">Phone number</label><input id="phone" className="text-input" value={checkout.phone} onChange={(event) => updateCheckout('phone', event.target.value)} autoComplete="tel" />{checkout.phone && !isValidPhone(checkout.phone) && <p className="field-hint is-error">Use 7–15 digits with optional +, spaces, hyphens, or parentheses.</p>}</div><div><label className="field-label" htmlFor="country">Country</label><select id="country" className="text-input" value={checkout.shipping_country_code} onChange={(event) => updateCheckout('shipping_country_code', event.target.value)} autoComplete="country"><option value="">Select a country</option>{countries.map(([name, code]) => <option key={code} value={code}>{name} ({code})</option>)}</select>{!checkout.shipping_country_code && <p className="field-hint is-error">Select your country.</p>}</div></div>
-            <div className="field-row"><div><label className="field-label" htmlFor="address-line1">Address line 1</label><input id="address-line1" className="text-input" value={checkout.shipping_address_line1} onChange={(event) => updateCheckout('shipping_address_line1', event.target.value)} autoComplete="address-line1" />{!checkout.shipping_address_line1.trim() && <p className="field-hint is-error">Enter your address.</p>}</div><div><label className="field-label" htmlFor="address-line2">Address line 2 <span className="optional-label">Optional</span></label><input id="address-line2" className="text-input" value={checkout.shipping_address_line2} onChange={(event) => updateCheckout('shipping_address_line2', event.target.value)} autoComplete="address-line2" /></div></div>
+            <div className="field-row"><div><label className="field-label" htmlFor="phone">Phone number</label><input id="phone" className="text-input" value={checkout.phone} onChange={(event) => updateCheckout('phone', event.target.value)} autoComplete="tel" />{checkout.phone && !isValidPhone(checkout.phone) && <p className="field-hint is-error">Use 7–15 digits with optional +, spaces, hyphens, or parentheses.</p>}</div><div><label className="field-label" htmlFor="country">Country</label><select id="country" className="text-input" value={checkout.shipping_country_code} onChange={(event) => updateCheckout('shipping_country_code', event.target.value)} autoComplete="country"><option value="">Select a country</option>{countries.map(([name, code]) => <option key={code} value={code}>{name} ({code})</option>)}</select>{touchedCheckoutFields.shipping_country_code && !checkout.shipping_country_code && <p className="field-hint is-error">Select your country.</p>}</div></div>
+            <div className="field-row"><div><label className="field-label" htmlFor="address-line1">Address line 1</label><input id="address-line1" className="text-input" value={checkout.shipping_address_line1} onChange={(event) => updateCheckout('shipping_address_line1', event.target.value)} autoComplete="address-line1" />{touchedCheckoutFields.shipping_address_line1 && !checkout.shipping_address_line1.trim() && <p className="field-hint is-error">Enter your address.</p>}</div><div><label className="field-label" htmlFor="address-line2">Address line 2 <span className="optional-label">Optional</span></label><input id="address-line2" className="text-input" value={checkout.shipping_address_line2} onChange={(event) => updateCheckout('shipping_address_line2', event.target.value)} autoComplete="address-line2" /></div></div>
             <div className="field-row field-row-three"><div><label className="field-label" htmlFor="city">City</label><input id="city" className="text-input" value={checkout.shipping_city} onChange={(event) => updateCheckout('shipping_city', event.target.value)} autoComplete="address-level2" />{checkout.shipping_city && !isValidPlaceName(checkout.shipping_city) && <p className="field-hint is-error">Use letters, spaces, apostrophes, hyphens, or periods.</p>}</div><div><label className="field-label" htmlFor="region">Region</label><input id="region" className="text-input" value={checkout.shipping_region} onChange={(event) => updateCheckout('shipping_region', event.target.value)} autoComplete="address-level1" />{checkout.shipping_region && !isValidPlaceName(checkout.shipping_region) && <p className="field-hint is-error">Use a valid region name.</p>}</div><div><label className="field-label" htmlFor="postal">Postal code</label><input id="postal" className="text-input" value={checkout.shipping_postal_code} onChange={(event) => updateCheckout('shipping_postal_code', event.target.value)} autoComplete="postal-code" />{checkout.shipping_postal_code && !isValidPostalCode(checkout.shipping_postal_code) && <p className="field-hint is-error">Use a valid postal code.</p>}</div></div>
             {checkoutError && <p className="form-message is-error" role="alert">{checkoutError}</p>}
             {checkoutSuccess && <p className="form-message is-success" role="status">{checkoutSuccess}</p>}
